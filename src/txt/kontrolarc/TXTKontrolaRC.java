@@ -58,15 +58,17 @@ public class TXTKontrolaRC {
         if (zbytek == 10) {
             zbytek = 0;
         }
-        // zbytek po dělení by měl být roven kontrolní číslici
-        if (zbytek != Integer.parseInt(kontrolni)) {
-            // když není roven, je to chyba
-            return false;
-        }
 
         // doplnění století v roku (rok na 4 čísla)
         int celyrok = Integer.parseInt(rok);
-        celyrok += (celyrok < 54) ? 2000 : 1900;
+        if (kontrolni.isEmpty()) {
+            // do roku 1953 byla RČ krátká a narození muselo být 19??
+            celyrok += 1900;
+        } else {
+            // od roku 1954 byla RČ dlouhá a narození může být po r. 2000
+            // tj. od roku 2054 nejsou RČ definovaná
+            celyrok += (celyrok < 54) ? 2000 : 1900;
+        }
 
         // korekce měsíce (žena a další speciality zavedené po roce 2003)
         int mes = Integer.parseInt(mesic);
@@ -76,6 +78,23 @@ public class TXTKontrolaRC {
             mes -= 50;
         } else if (mes > 20 && celyrok > 2003) {
             mes -= 20;
+        }
+
+        // do roku 1953 není kontrolní číslice
+        if (celyrok < 1954 && ! kontrolni.isEmpty()) {
+            return false;
+        }
+
+        // od roku 1954 musí být kontrolní číslice
+        if (celyrok >= 1954 && kontrolni.isEmpty()) {
+            return false;
+        }
+
+        // když máme kontrolní číslici, tak by zbytek po dělení
+        // měl být roven kontrolní číslici
+        if (! kontrolni.isEmpty() && zbytek != Integer.parseInt(kontrolni)) {
+            // když není roven, je to chyba
+            return false;
         }
 
         // korigovaný měsíc musíme mít ve dvou cifrách (01, ... 12)
